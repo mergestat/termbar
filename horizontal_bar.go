@@ -16,6 +16,7 @@ type horizontal struct {
 	maxWidth       int
 	chars          string
 	bars           Bars
+	maxVal         float64
 	labelSeparator string
 	valueFormatter func(bar Bar) string
 }
@@ -31,6 +32,17 @@ func WithMaxWidth(w int) HorizontalOption {
 func WithBarChars(s string) HorizontalOption {
 	return func(c *horizontal) {
 		c.chars = s
+	}
+}
+
+// WithMaxVal sets the max value bars will be made relative to.
+// By default, the bar with the highest value will take up the full width
+// and all other bars will be sized relative to it.
+// However, for charts where an absolute max value is desired, such as a percentage,
+// you can use this option to make all bars sized relative to a specific value (i.e. 100.0 for % bars)
+func WithMaxVal(v float64) HorizontalOption {
+	return func(c *horizontal) {
+		c.maxVal = v
 	}
 }
 
@@ -82,6 +94,9 @@ func NewHorizontal(values Bars, options ...HorizontalOption) *horizontal {
 // Print the bar chart to a writer
 func (c *horizontal) Print(w io.Writer) {
 	maxVal := c.bars.MaxValue()
+	if c.maxVal != 0 {
+		maxVal = c.maxVal
+	}
 	maxLab := c.bars.MaxLabelWidth()
 
 	for _, bar := range c.bars {
