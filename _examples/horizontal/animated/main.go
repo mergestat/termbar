@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	p := tea.NewProgram(newModel(3))
+	p := tea.NewProgram(newModel(5))
 
 	if p.Start() != nil {
 		fmt.Println("could not start program")
@@ -41,7 +41,6 @@ func newModel(barCount int) *model {
 	target := make(termbar.Bars, barCount)
 	for i := 0; i < barCount; i++ {
 		bar := termbar.Bar{
-			Label: fmt.Sprintf("%d", i),
 			Value: float64(rand.Intn(99) + 1),
 		}
 		current[i] = barWithVelocity{
@@ -52,13 +51,14 @@ func newModel(barCount int) *model {
 	}
 
 	m := model{
-		spring:  harmonica.NewSpring(harmonica.FPS(60), 12.0, .7),
+		spring:  harmonica.NewSpring(harmonica.FPS(60), 7.0, .7),
 		current: current,
 		target:  target,
 		chartOpts: []termbar.HorizontalOption{
 			termbar.WithMaxVal(100.0),
 			termbar.WithValueFormatter(func(b termbar.Bar) string { return "" }),
 			termbar.WithLabelSeparator(" "),
+			termbar.WithMaxWidth(100),
 		},
 	}
 
