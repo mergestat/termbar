@@ -5,60 +5,60 @@ import (
 	"io"
 	"math"
 	"strings"
-
-	"golang.org/x/term"
 )
 
 // HorizontalOption is an option for a horizontal bar graph
-type HorizontalOption func(*Horizontal)
+type HorizontalOption interface {
+	setHorizontalOption() func(*Horizontal)
+}
 
+// Horizontal is a horizontal bar chart
 type Horizontal struct {
 	Chart
-	maxWidth       int
+	*baseChart
 	chars          string
 	Bars           Bars
-	maxVal         float64
 	labelSeparator string
 	valueFormatter func(bar Bar) string
 }
 
-// WithMaxWidth sets the maximum width
-func WithMaxWidth(w int) HorizontalOption {
+type setHorizontalBarChars struct{ chars string }
+
+func (o setHorizontalBarChars) setHorizontalOption() func(*Horizontal) {
 	return func(c *Horizontal) {
-		c.maxWidth = w
+		c.chars = o.chars
 	}
 }
 
 // WithBarChars sets the characters to use in the bar
 func WithBarChars(s string) HorizontalOption {
-	return func(c *Horizontal) {
-		c.chars = s
-	}
+	return &setHorizontalBarChars{chars: s}
 }
 
-// WithMaxVal sets the max value bars will be made relative to.
-// By default, the bar with the highest value will take up the full width
-// and all other bars will be sized relative to it.
-// However, for charts where an absolute max value is desired, such as a percentage,
-// you can use this option to make all bars sized relative to a specific value (i.e. 100.0 for % bars)
-func WithMaxVal(v float64) HorizontalOption {
+type setHorizontalLabelSeparator struct{ labelSeparator string }
+
+func (o setHorizontalLabelSeparator) setHorizontalOption() func(*Horizontal) {
 	return func(c *Horizontal) {
-		c.maxVal = v
+		c.labelSeparator = o.labelSeparator
 	}
 }
 
 // WithLabelSeparator sets the separator to use between the label and bar
 func WithLabelSeparator(s string) HorizontalOption {
+	return &setHorizontalLabelSeparator{labelSeparator: s}
+}
+
+type setValueFormatter struct{ valueFormatter func(Bar) string }
+
+func (o setValueFormatter) setHorizontalOption() func(*Horizontal) {
 	return func(c *Horizontal) {
-		c.labelSeparator = s
+		c.valueFormatter = o.valueFormatter
 	}
 }
 
 // WithValueFormatter sets a formatter function for displaying the value after the bar
 func WithValueFormatter(f func(Bar) string) HorizontalOption {
-	return func(c *Horizontal) {
-		c.valueFormatter = f
-	}
+	return &setValueFormatter{valueFormatter: f}
 }
 
 // NewHorizontal returns a new horizontal bar chart.
@@ -72,13 +72,10 @@ func WithValueFormatter(f func(Bar) string) HorizontalOption {
 //
 // d: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 78
 func NewHorizontal(values Bars, options ...HorizontalOption) *Horizontal {
-	w, _, _ := term.GetSize(0)
-	if w < 0 {
-		w = 40
-	}
-
+	// default values
+	// TODO(patrickdevivo) move this out into a central location?
 	c := &Horizontal{
-		maxWidth:       w,
+		baseChart:      newDefaultBaseChart(),
 		chars:          "▇",
 		Bars:           values,
 		labelSeparator: ": ",
@@ -86,7 +83,12 @@ func NewHorizontal(values Bars, options ...HorizontalOption) *Horizontal {
 	}
 
 	for _, opt := range options {
-		opt(c)
+		switch v := opt.(type) {
+		case ChartOption:
+			v.set()(c.baseChart)
+		case HorizontalOption:
+			v.setHorizontalOption()(c)
+		}
 	}
 
 	return c
