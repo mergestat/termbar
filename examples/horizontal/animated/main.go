@@ -80,7 +80,7 @@ func animate() tea.Cmd {
 }
 
 func updateTargetTick() tea.Cmd {
-	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
+	return tea.Tick(300*time.Millisecond, func(t time.Time) tea.Msg {
 		return updateMsg(t)
 	})
 }
