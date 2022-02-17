@@ -10,12 +10,13 @@ import (
 )
 
 // HorizontalOption is an option for a horizontal bar graph
-type HorizontalOption func(*horizontal)
+type HorizontalOption func(*Horizontal)
 
-type horizontal struct {
+type Horizontal struct {
+	Chart
 	maxWidth       int
 	chars          string
-	bars           Bars
+	Bars           Bars
 	maxVal         float64
 	labelSeparator string
 	valueFormatter func(bar Bar) string
@@ -23,14 +24,14 @@ type horizontal struct {
 
 // WithMaxWidth sets the maximum width
 func WithMaxWidth(w int) HorizontalOption {
-	return func(c *horizontal) {
+	return func(c *Horizontal) {
 		c.maxWidth = w
 	}
 }
 
 // WithBarChars sets the characters to use in the bar
 func WithBarChars(s string) HorizontalOption {
-	return func(c *horizontal) {
+	return func(c *Horizontal) {
 		c.chars = s
 	}
 }
@@ -41,21 +42,21 @@ func WithBarChars(s string) HorizontalOption {
 // However, for charts where an absolute max value is desired, such as a percentage,
 // you can use this option to make all bars sized relative to a specific value (i.e. 100.0 for % bars)
 func WithMaxVal(v float64) HorizontalOption {
-	return func(c *horizontal) {
+	return func(c *Horizontal) {
 		c.maxVal = v
 	}
 }
 
 // WithLabelSeparator sets the separator to use between the label and bar
 func WithLabelSeparator(s string) HorizontalOption {
-	return func(c *horizontal) {
+	return func(c *Horizontal) {
 		c.labelSeparator = s
 	}
 }
 
 // WithValueFormatter sets a formatter function for displaying the value after the bar
 func WithValueFormatter(f func(Bar) string) HorizontalOption {
-	return func(c *horizontal) {
+	return func(c *Horizontal) {
 		c.valueFormatter = f
 	}
 }
@@ -70,16 +71,16 @@ func WithValueFormatter(f func(Bar) string) HorizontalOption {
 // c: ▇▇▇ 15
 //
 // d: ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇ 78
-func NewHorizontal(values Bars, options ...HorizontalOption) *horizontal {
+func NewHorizontal(values Bars, options ...HorizontalOption) *Horizontal {
 	w, _, _ := term.GetSize(0)
 	if w < 0 {
 		w = 40
 	}
 
-	c := &horizontal{
+	c := &Horizontal{
 		maxWidth:       w,
 		chars:          "▇",
-		bars:           values,
+		Bars:           values,
 		labelSeparator: ": ",
 		valueFormatter: func(bar Bar) string { return fmt.Sprintf(" %0.f", bar.Value) },
 	}
@@ -92,16 +93,16 @@ func NewHorizontal(values Bars, options ...HorizontalOption) *horizontal {
 }
 
 // Print the bar chart to a writer
-func (c *horizontal) Print(w io.Writer) {
-	maxVal := c.bars.MaxValue()
+func (c *Horizontal) Print(w io.Writer) {
+	maxVal := c.Bars.MaxValue()
 	if c.maxVal != 0 {
 		maxVal = c.maxVal
 	}
-	maxLab := c.bars.MaxLabelWidth()
+	maxLab := c.Bars.MaxLabelWidth()
 
-	for _, bar := range c.bars {
+	for _, bar := range c.Bars {
 		s := c.valueFormatter(bar)
-		v := int(math.RoundToEven((bar.Value/maxVal)*float64(c.maxWidth))) - maxLab - len(c.chars) - len(s)
+		v := int(math.Round((bar.Value/maxVal)*float64(c.maxWidth))) - maxLab - len(c.chars) - len(s)
 		if v < 1 {
 			v = 1
 		}

@@ -2,6 +2,6 @@ module github.com/mergestat/termbar
 
 go 1.17
 
-require golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
+require golang.org/x/term v0.0.0-20210422114643-f5beecf764ed
 
-require golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+require golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect

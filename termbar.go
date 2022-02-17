@@ -1,5 +1,11 @@
 package termbar
 
+import "io"
+
+type Chart interface {
+	Print(io.Writer)
+}
+
 type Bar struct {
 	Label string
 	Value float64
