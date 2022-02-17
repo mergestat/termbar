@@ -6,7 +6,7 @@ import (
 	"math"
 )
 
-var sparks = []string{"▁", "▂", "▃", "▅", "▇"}
+var sparks = []string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
 
 type Sparkline struct {
 	Chart
